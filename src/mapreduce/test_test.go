@@ -2,6 +2,7 @@ package mapreduce
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
@@ -128,10 +129,15 @@ func port(suffix string) string {
 	s += suffix
 	return s
 }
+func getport() string {
+	l, _ := net.Listen("tcp", ":0")
+	return strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+}
 
 func setup() *Master {
 	files := makeInputs(nMap)
-	master := port("master")
+	//master := port("master")
+	master := "127.0.0.1:" + getport()
 	mr := Distributed("test", files, nReduce, master)
 	return mr
 }
@@ -162,7 +168,7 @@ func TestSequentialMany(t *testing.T) {
 func TestParallelBasic(t *testing.T) {
 	mr := setup()
 	for i := 0; i < 2; i++ {
-		go RunWorker(mr.address, port("worker"+strconv.Itoa(i)),
+		go RunWorker(mr.address, "127.0.0.1:"+getport(),
 			MapFunc, ReduceFunc, -1, nil)
 	}
 	mr.Wait()
@@ -175,7 +181,7 @@ func TestParallelCheck(t *testing.T) {
 	mr := setup()
 	parallelism := &Parallelism{}
 	for i := 0; i < 2; i++ {
-		go RunWorker(mr.address, port("worker"+strconv.Itoa(i)),
+		go RunWorker(mr.address, "127.0.0.1:"+getport(),
 			MapFunc, ReduceFunc, -1, parallelism)
 	}
 	mr.Wait()
@@ -194,9 +200,9 @@ func TestParallelCheck(t *testing.T) {
 func TestOneFailure(t *testing.T) {
 	mr := setup()
 	// Start 2 workers that fail after 10 tasks
-	go RunWorker(mr.address, port("worker"+strconv.Itoa(0)),
+	go RunWorker(mr.address, "127.0.0.1:"+getport(),
 		MapFunc, ReduceFunc, 10, nil)
-	go RunWorker(mr.address, port("worker"+strconv.Itoa(1)),
+	go RunWorker(mr.address, "127.0.0.1:"+getport(),
 		MapFunc, ReduceFunc, -1, nil)
 	mr.Wait()
 	check(t, mr.files)
@@ -216,10 +222,10 @@ func TestManyFailures(t *testing.T) {
 			break
 		default:
 			// Start 2 workers each sec. The workers fail after 10 tasks
-			w := port("worker" + strconv.Itoa(i))
+			w := "127.0.0.1:" + getport()
 			go RunWorker(mr.address, w, MapFunc, ReduceFunc, 10, nil)
 			i++
-			w = port("worker" + strconv.Itoa(i))
+			w = "127.0.0.1:" + getport()
 			go RunWorker(mr.address, w, MapFunc, ReduceFunc, 10, nil)
 			i++
 			time.Sleep(1 * time.Second)
