@@ -76,7 +76,7 @@ func doMap(
 	kvs := mapF(inFile, string(content))
 	for _, kv := range kvs {
 		index := ihash(kv.Key) % nReduce
-		outputFiles[index].Encode(&kv)
+		outputFiles[index].Encode(&kv) //接口类型的参数对应的是指针
 	}
 }
 

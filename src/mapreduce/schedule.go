@@ -46,7 +46,7 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 			var address string
 			for !res {
 				address = <-registerChan
-				res = call(address, "Worker.DoTask", &DoTaskArgs{
+				res = call(address, "Worker.DoTask", &DoTaskArgs{ //接口类型的参数对应的是引用
 					JobName:       jobName,
 					File:          file,
 					Phase:         phase,
